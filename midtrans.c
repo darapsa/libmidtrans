@@ -26,7 +26,7 @@ static size_t append(char *data, size_t size, size_t nmemb,
 {
 	size_t realsize = size * nmemb;
 	res->data = realloc(res->data, res->size + realsize + 1);
-	strncpy(&(res->data[res->size]), data, realsize);
+	strncpy(&res->data[res->size], data, realsize);
 	res->size += realsize;
 	res->data[res->size] = '\0';
 	return realsize;

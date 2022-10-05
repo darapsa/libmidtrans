@@ -16,12 +16,19 @@ static struct curl_slist *slist;
 static pthread_t *threads;
 static size_t num_threads = 0;
 
-static size_t append(char *data, size_t size, size_t nmemb, char **json)
+struct response {
+	size_t size;
+	char *data;
+};
+
+static size_t append(char *data, size_t size, size_t nmemb,
+		struct response *res)
 {
 	size_t realsize = size * nmemb;
-	size_t json_len = *json ? strlen(*json) : 0;
-	*json = realloc(*json, json_len + realsize + 1);
-	strlcpy(&(*json)[json_len], data, realsize + 1);
+	res->data = realloc(res->data, res->size + realsize + 1);
+	strncpy(&(res->data[res->size]), data, realsize);
+	res->size += realsize;
+	res->data[res->size] = '\0';
 	return realsize;
 }
 
@@ -75,13 +82,13 @@ void midtrans_init(const char *api_key, const char *cainfo)
 
 static void *request(void *arg)
 {
-	char *json = NULL;
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json);
+	struct response res = { 0, NULL };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
 	curl_easy_perform(curl);
 #ifdef DEBUG
-	printf("%s\n", json);
+	printf("%s\n", res.data);
 #endif
-	free(json);
+	free(res.data);
 	return NULL;
 }
 

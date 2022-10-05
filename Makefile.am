@@ -1,3 +1,4 @@
+ACLOCAL_AMFLAGS = -I m4
 lib_LTLIBRARIES = libmidtrans.la
 libmidtrans_la_SOURCES = midtrans.c
 libmidtrans_la_CPPFLAGS = $(DEPS_CFLAGS)

@@ -25,6 +25,9 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 	curl_global_init(CURL_GLOBAL_SSL);
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+#ifdef DEBUG
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+#endif
 
 	static const char *basic_tmpl = "%s:";
 	const size_t basic_len = strlen(basic_tmpl) - strlen("%s")

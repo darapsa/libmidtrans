@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <openssl/bio.h>
+#include <openssl/evp.h>
 #include <curl/curl.h>
 #include <json.h>
 #include "midtrans.h"
@@ -21,13 +23,27 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 	curl_global_init(CURL_GLOBAL_SSL);
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-	struct curl_slist *list
-		= curl_slist_append(NULL, "Accept: application/json");
-	list = curl_slist_append(list, "Content-Type: application/json");
-	static const char *hdr_tmpl = "Authorization: %s";
-	char auth[strlen(hdr_tmpl) - strlen("%s") + strlen(api_key) + 1];
-	sprintf(auth, hdr_tmpl, api_key);
-	list = curl_slist_append(list, auth);
+	static const char *basic_tmpl = "%s:";
+	const size_t basic_len = strlen(basic_tmpl) - strlen("%s")
+		+ strlen(api_key);
+	char basic[basic_len + 1];
+	sprintf(basic, basic_tmpl, api_key);
+	BIO *b64 = BIO_new(BIO_f_base64());
+	BIO *mem = BIO_new(BIO_s_mem());
+	BIO_push(b64, mem);
+	BIO_puts(b64, basic);
+	char *pp;
+	long base64_len = BIO_get_mem_data(b64, &pp);
+	char base64[base64_len + 1];
+	strlcpy(base64, pp, base64_len + 1);
+	static const char *hdr_tmpl = "Authorization: Basic %s";
+	char auth[strlen(hdr_tmpl) - strlen("%s") + base64_len + 1];
+	sprintf(auth, hdr_tmpl, base64);
+	BIO_free_all(b64);
+	struct curl_slist *slist = curl_slist_append(NULL, auth);
+	slist = curl_slist_append(slist, "Accept: application/json");
+	slist = curl_slist_append(slist, "Content-Type: application/json");
+	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 	if (cainfo)
 		curl_easy_setopt(curl, CURLOPT_CAINFO, cainfo);
 }

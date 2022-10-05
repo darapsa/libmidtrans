@@ -54,6 +54,15 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 		curl_easy_setopt(curl, CURLOPT_CAINFO, cainfo);
 }
 
+static size_t append(char *data, size_t size, size_t nmemb, char **res)
+{
+	size_t realsize = size * nmemb;
+	size_t res_len = *res ? strlen(*res) : 0;
+	*res = realloc(*res, res_len + realsize + 1);
+	strlcpy(&(*res)[res_len], data, realsize + 1);
+	return realsize;
+}
+
 void midtrans_status(const char *order_id)
 {
 	static const char *tmpl = "%s%s/status";
@@ -61,7 +70,17 @@ void midtrans_status(const char *order_id)
 		+ (sandbox ? strlen(ORDER_ID) : strlen(order_id)) + 1];
 	sprintf(url, tmpl, base_url, sandbox ? ORDER_ID : order_id);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
+
+	char *res = NULL;
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, append);
 	curl_easy_perform(curl);
+
+#ifdef DEBUG
+	printf("%s\n", res);
+#endif
+	free(res);
 }
 
 void midtrans_cleanup()

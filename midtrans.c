@@ -8,18 +8,20 @@
 
 #define ORDER_ID "SANDBOX-G710367688-806"
 
-static _Bool sandbox;
+static _Bool production = 0;
 static char *base_url;
 static CURL *curl;
 static struct curl_slist *slist;
 
-void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
+void midtrans_init(const char *api_key, const char *cainfo)
 {
-	sandbox = !production;
+	static const char *prefix = "SB-";
+	if (strncmp(api_key, prefix, strlen(prefix)))
+		production = 1;
 	static const char *url_tmpl = "https://api.%smidtrans.com/v2/";
 	static const char *infix = "sandbox.";
 	base_url = malloc(strlen(url_tmpl) - strlen ("%s")
-			+ sandbox * strlen(infix) + 1);
+			+ !production * strlen(infix) + 1);
 	sprintf(base_url, url_tmpl, production ? "" : infix);
 
 	curl_global_init(CURL_GLOBAL_SSL);
@@ -71,8 +73,8 @@ void midtrans_status(const char *order_id)
 {
 	static const char *tmpl = "%s%s/status";
 	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
-		+ (sandbox ? strlen(ORDER_ID) : strlen(order_id)) + 1];
-	sprintf(url, tmpl, base_url, sandbox ? ORDER_ID : order_id);
+		+ (production ? strlen(order_id) : strlen(ORDER_ID)) + 1];
+	sprintf(url, tmpl, base_url, production ? order_id : ORDER_ID);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
 	char *res = NULL;

@@ -65,7 +65,8 @@ void midtrans_init(const char *api_key, const char *cainfo)
 	char *pp;
 	long base64_len = BIO_get_mem_data(b64, &pp) - 1;
 	char base64[base64_len + 1];
-	strlcpy(base64, pp, base64_len + 1);
+	strncpy(base64, pp, base64_len);
+	base64[base64_len] = '\0';
 	BIO_free_all(b64);
 
 	static const char *hdr_tmpl = "Authorization: Basic %s";

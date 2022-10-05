@@ -1,10 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#ifdef __EMSCRIPTEN__
-#include <emscripten/fetch.h>
-#else
 #include <curl/curl.h>
-#endif
 #include <json.h>
 #include "midtrans.h"
 
@@ -12,9 +8,7 @@
 
 static _Bool sandbox;
 static char *base_url;
-#ifndef __EMSCRIPTEN__
 static CURL *curl;
-#endif
 
 void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 {
@@ -24,7 +18,6 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 	base_url = malloc(strlen(url_tmpl) - strlen ("%s")
 			+ sandbox * strlen(infix) + 1);
 	sprintf(base_url, url_tmpl, production ? "" : infix);
-#ifndef __EMSCRIPTEN__
 	curl_global_init(CURL_GLOBAL_SSL);
 	curl = curl_easy_init();
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
@@ -37,7 +30,6 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 	list = curl_slist_append(list, auth);
 	if (cainfo)
 		curl_easy_setopt(curl, CURLOPT_CAINFO, cainfo);
-#endif
 }
 
 void midtrans_status(const char *order_id)
@@ -46,17 +38,13 @@ void midtrans_status(const char *order_id)
 	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
 		+ (sandbox ? strlen(ORDER_ID) : strlen(order_id)) + 1];
 	sprintf(url, tmpl, base_url, sandbox ? ORDER_ID : order_id);
-#ifndef __EMSCRIPTEN__
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 	curl_easy_perform(curl);
-#endif
 }
 
 void midtrans_cleanup()
 {
 	free(base_url);
-#ifndef __EMSCRIPTEN__
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
-#endif
 }

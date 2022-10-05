@@ -13,6 +13,7 @@ case $host in
 esac
 AM_CONDITIONAL([IOS], [test "x$ios" = xtrue])
 AC_FUNC_MALLOC
+AC_FUNC_REALLOC
 AC_TYPE_SIZE_T
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIRS([m4])

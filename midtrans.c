@@ -35,7 +35,8 @@ void midtrans_init(_Bool production, const char *api_key, const char *cainfo)
 	BIO *b64 = BIO_new(BIO_f_base64());
 	BIO *mem = BIO_new(BIO_s_mem());
 	BIO_push(b64, mem);
-	BIO_puts(b64, basic);
+	BIO_write(b64, basic, basic_len);
+	BIO_flush(b64);
 	char *pp;
 	long base64_len = BIO_get_mem_data(b64, &pp);
 	char base64[base64_len + 1];

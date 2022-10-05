@@ -2,6 +2,7 @@
 #include <string.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
+#include <pthread.h>
 #include <curl/curl.h>
 #include <json.h>
 #include "midtrans.h"
@@ -12,6 +13,17 @@ static _Bool production = 0;
 static char *base_url;
 static CURL *curl;
 static struct curl_slist *slist;
+static pthread_t *threads;
+static size_t num_threads = 0;
+
+static size_t append(char *data, size_t size, size_t nmemb, char **json)
+{
+	size_t realsize = size * nmemb;
+	size_t json_len = *json ? strlen(*json) : 0;
+	*json = realloc(*json, json_len + realsize + 1);
+	strlcpy(&(*json)[json_len], data, realsize + 1);
+	return realsize;
+}
 
 void midtrans_init(const char *api_key, const char *cainfo)
 {
@@ -26,6 +38,7 @@ void midtrans_init(const char *api_key, const char *cainfo)
 
 	curl_global_init(CURL_GLOBAL_SSL);
 	curl = curl_easy_init();
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, append);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 #ifdef DEBUG
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -60,13 +73,16 @@ void midtrans_init(const char *api_key, const char *cainfo)
 		curl_easy_setopt(curl, CURLOPT_CAINFO, cainfo);
 }
 
-static size_t append(char *data, size_t size, size_t nmemb, char **res)
+static void *request(void *arg)
 {
-	size_t realsize = size * nmemb;
-	size_t res_len = *res ? strlen(*res) : 0;
-	*res = realloc(*res, res_len + realsize + 1);
-	strlcpy(&(*res)[res_len], data, realsize + 1);
-	return realsize;
+	char *json = NULL;
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &json);
+	curl_easy_perform(curl);
+#ifdef DEBUG
+	printf("%s\n", json);
+#endif
+	free(json);
+	return NULL;
 }
 
 void midtrans_status(const char *order_id)
@@ -77,20 +93,14 @@ void midtrans_status(const char *order_id)
 	sprintf(url, tmpl, base_url, production ? order_id : ORDER_ID);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
-	char *res = NULL;
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
-
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, append);
-	curl_easy_perform(curl);
-
-#ifdef DEBUG
-	printf("%s\n", res);
-#endif
-	free(res);
+	threads = realloc(threads, ++num_threads * sizeof(pthread_t));
+	pthread_create(&threads[num_threads - 1], NULL, request, NULL);
 }
 
 void midtrans_cleanup()
 {
+	for (size_t i = 0; i < num_threads; i++)
+		pthread_join(threads[i], NULL);
 	free(base_url);
 	curl_slist_free_all(slist);
 	curl_easy_cleanup(curl);

@@ -131,10 +131,28 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 			sprintf(payment, payment_tmpl, banktransfer->bank);
 			break;
 	}
+	size_t i = 0;
+	size_t fields_len = 0;
+	char *fields = NULL;
+	static const char *field_tmpl = "\"%s\": \"%s\",";
+	const size_t field_static_len = strlen(field_tmpl) - strlen("%s") * 2;
+	while (i < 5 && custom_fields[i] && custom_fields[i + 1]) {
+		size_t field_len = field_static_len + strlen(custom_fields[i])
+			+ strlen(custom_fields[i + 1]);
+		char field[field_len + 1];
+		sprintf(field, field_tmpl, custom_fields[i],
+				custom_fields[i + 1]);
+		fields_len += field_len;
+		fields = realloc(fields, fields_len + field_len + 1);
+		strcpy(&fields[fields_len], field);
+		fields_len += field_len;
+		i += 2;
+	}
 	static const char *post_tmpl =
 		"{\n"
 		"\t\"payment_type\": \"%s"
 		"\t},"
+		"%s"
 		"\t\"transaction_details\": {"
 		"\t\t\"order_id\": \"%s\","
 		"\t\t\"gross_amount\": %ld"
@@ -144,10 +162,10 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 	size_t gross_amount_len = 1;
 	while ((gross_amount /= 10))
 		gross_amount_len++;
-	char post[strlen(post_tmpl) - strlen("%s") * 2 - strlen("%ld")
-		+ payment_len + strlen(transaction->order_id)
+	char post[strlen(post_tmpl) - strlen("%s") * 3 - strlen("%ld")
+		+ payment_len + fields_len + strlen(transaction->order_id)
 		+ gross_amount_len + 1];
-	sprintf(post, post_tmpl, payment, transaction->order_id,
+	sprintf(post, post_tmpl, payment, fields, transaction->order_id,
 			transaction->gross_amount);
 	free(payment);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);

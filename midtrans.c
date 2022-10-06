@@ -120,15 +120,27 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 		case MIDTRANS_BANKTRANSFER:
 		default:
 			;
-			char *payment_tmpl = "bank_transfer\","
-				"\t\"bank_transfer\": {"
-				"\t\t\"bank\": \"%s\"";
-			struct midtrans_banktransfer *banktransfer
-				= object;
-			payment_len = strlen(payment_tmpl) - strlen("%s")
-				+ strlen(banktransfer->bank);
+			struct midtrans_banktransfer *banktransfer = object;
+			static const char *va_number_tmpl = ",\n"
+				"\t\t\"va_number\": \"%s\"";
+			size_t va_number_len = 0;
+			char *va_number = NULL;
+			if (banktransfer->va_number) {
+				va_number = malloc(strlen(va_number_tmpl)
+						- strlen("%s") +
+						strlen(banktransfer->va_number)
+						+ 1);
+				sprintf(va_number, va_number_tmpl,
+						banktransfer->va_number);
+			}
+			static const char *payment_tmpl = "bank_transfer\",\n"
+				"\t\"bank_transfer\": {\n"
+				"\t\t\"bank\": \"%s\"%s";
+			payment_len = strlen(payment_tmpl) - strlen("%s") * 2
+				+ va_number_len + strlen(banktransfer->bank);
 			payment = malloc(payment_len + 1);
-			sprintf(payment, payment_tmpl, banktransfer->bank);
+			sprintf(payment, payment_tmpl, banktransfer->bank,
+					va_number_len ? va_number : "");
 			break;
 	}
 	size_t i = 0;

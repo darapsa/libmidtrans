@@ -126,10 +126,10 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 			size_t va_number_len = 0;
 			char *va_number = NULL;
 			if (banktransfer->va_number) {
-				va_number = malloc(strlen(va_number_tmpl)
+				va_number_len = strlen(va_number_tmpl)
 						- strlen("%s") +
-						strlen(banktransfer->va_number)
-						+ 1);
+						strlen(banktransfer->va_number);
+				va_number = malloc(va_number_len + 1);
 				sprintf(va_number, va_number_tmpl,
 						banktransfer->va_number);
 			}

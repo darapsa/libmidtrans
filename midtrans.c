@@ -142,7 +142,6 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 		char field[field_len + 1];
 		sprintf(field, field_tmpl, custom_fields[i],
 				custom_fields[i + 1]);
-		fields_len += field_len;
 		fields = realloc(fields, fields_len + field_len + 1);
 		strcpy(&fields[fields_len], field);
 		fields_len += field_len;

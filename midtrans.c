@@ -146,7 +146,7 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 	size_t i = 0;
 	size_t fields_len = 0;
 	char *fields = NULL;
-	static const char *field_tmpl = "\"%s\": \"%s\",";
+	static const char *field_tmpl = "\n\t\"%s\": \"%s\",";
 	const size_t field_static_len = strlen(field_tmpl) - strlen("%s") * 2;
 	while (i < 5 && custom_fields[i] && custom_fields[i + 1]) {
 		size_t field_len = field_static_len + strlen(custom_fields[i])
@@ -162,12 +162,12 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 	static const char *post_tmpl =
 		"{\n"
 		"\t\"payment_type\": \"%s"
-		"\t},"
-		"%s"
-		"\t\"transaction_details\": {"
-		"\t\t\"order_id\": \"%s\","
-		"\t\t\"gross_amount\": %ld"
-		"\t}"
+		"\n\t},"
+		"%s\n"
+		"\t\"transaction_details\": {\n"
+		"\t\t\"order_id\": \"%s\",\n"
+		"\t\t\"gross_amount\": %ld\n"
+		"\t}\n"
 		"}";
 	long gross_amount = transaction->gross_amount;
 	size_t gross_amount_len = 1;

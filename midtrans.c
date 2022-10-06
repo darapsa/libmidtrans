@@ -165,8 +165,8 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 	char post[strlen(post_tmpl) - strlen("%s") * 3 - strlen("%ld")
 		+ payment_len + fields_len + strlen(transaction->order_id)
 		+ gross_amount_len + 1];
-	sprintf(post, post_tmpl, payment, fields, transaction->order_id,
-			transaction->gross_amount);
+	sprintf(post, post_tmpl, payment, fields_len ? fields : "",
+			transaction->order_id, transaction->gross_amount);
 	free(payment);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 

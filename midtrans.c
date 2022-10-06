@@ -148,7 +148,8 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 	char *fields = NULL;
 	static const char *field_tmpl = "\n\t\"%s\": \"%s\",";
 	const size_t field_static_len = strlen(field_tmpl) - strlen("%s") * 2;
-	while (i < 5 && custom_fields[i] && custom_fields[i + 1]) {
+	while (i < 5 && custom_fields && custom_fields[i]
+			&& custom_fields[i + 1]) {
 		size_t field_len = field_static_len + strlen(custom_fields[i])
 			+ strlen(custom_fields[i + 1]);
 		char field[field_len + 1];

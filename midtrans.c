@@ -138,6 +138,7 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 		"\t\"transaction_details\": {"
 		"\t\t\"order_id\": \"%s\","
 		"\t\t\"gross_amount\": %ld"
+		"\t}"
 		"}";
 	long gross_amount = transaction->gross_amount;
 	size_t gross_amount_len = 1;

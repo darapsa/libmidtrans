@@ -7,7 +7,7 @@ struct midtrans_transaction {
 };
 
 enum midtrans_payment {
-	MIDTRANS_CREDITCARD,
+	MIDTRANS_CREDITCARD = 0,
 	MIDTRANS_BANKTRANSFER,
 	MIDTRANS_BCA_KLIKBCA,
 	MIDTRANS_BCA_KLIKPAY,
@@ -36,7 +36,7 @@ extern "C" {
 
 void midtrans_init(const char *api_key, const char *cainfo);
 void midtrans_status(const char *order_id);
-void midtrans_charge(enum midtrans_payment payment, void *object,
+void midtrans_charge(enum midtrans_payment type, void *payment,
 		struct midtrans_transaction *transaction,
 		char *custom_fields[]);
 void midtrans_cleanup();

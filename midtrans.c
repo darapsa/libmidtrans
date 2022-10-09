@@ -105,44 +105,34 @@ void midtrans_status(const char *order_id)
 	pthread_create(&threads[num_threads - 1], NULL, request, NULL);
 }
 
-void midtrans_charge(enum midtrans_payment type, void *object,
-		struct midtrans_transaction *transaction,
-		char *custom_fields[])
+void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
+		struct midtrans_transaction *transaction, char *custom_fields[])
 {
 	static const char *url_tmpl = "%scharge";
 	char url[strlen(url_tmpl) - strlen("%s") + strlen(base_url) + 1];
 	sprintf(url, url_tmpl, base_url);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
-	size_t payment_len = 0;
-	char *payment = NULL;
-	switch (type) {
-		case MIDTRANS_BANKTRANSFER:
-		default:
-			;
-			struct midtrans_banktransfer *banktransfer = object;
-			static const char *va_number_tmpl = ",\n"
-				"\t\t\"va_number\": \"%s\"";
-			size_t va_number_len = 0;
-			char *va_number = NULL;
-			if (banktransfer->va_number) {
-				va_number_len = strlen(va_number_tmpl)
-						- strlen("%s") +
-						strlen(banktransfer->va_number);
-				va_number = malloc(va_number_len + 1);
-				sprintf(va_number, va_number_tmpl,
-						banktransfer->va_number);
-			}
-			static const char *payment_tmpl = "bank_transfer\",\n"
-				"\t\"bank_transfer\": {\n"
-				"\t\t\"bank\": \"%s\"%s";
-			payment_len = strlen(payment_tmpl) - strlen("%s") * 2
-				+ va_number_len + strlen(banktransfer->bank);
-			payment = malloc(payment_len + 1);
-			sprintf(payment, payment_tmpl, banktransfer->bank,
-					va_number_len ? va_number : "");
-			break;
+	static const char *va_number_tmpl = ",\n"
+		"\t\t\"va_number\": \"%s\"";
+	size_t va_number_len = 0;
+	char *va_number = NULL;
+	if (banktransfer->va_number) {
+		va_number_len = strlen(va_number_tmpl) - strlen("%s")
+			+ strlen(banktransfer->va_number);
+		va_number = malloc(va_number_len + 1);
+		sprintf(va_number, va_number_tmpl, banktransfer->va_number);
 	}
+
+	static const char *payment_tmpl = "bank_transfer\",\n"
+		"\t\"bank_transfer\": {\n"
+		"\t\t\"bank\": \"%s\"%s";
+	const size_t payment_len = strlen(payment_tmpl) - strlen("%s") * 2
+		+ va_number_len + strlen(banktransfer->bank);
+	char *payment = malloc(payment_len + 1);
+	sprintf(payment, payment_tmpl, banktransfer->bank,
+			va_number_len ? va_number : "");
+
 	size_t i = 0;
 	size_t fields_len = 0;
 	char *fields = NULL;
@@ -160,6 +150,7 @@ void midtrans_charge(enum midtrans_payment type, void *object,
 		fields_len += field_len;
 		i += 2;
 	}
+
 	static const char *post_tmpl =
 		"{\n"
 		"\t\"payment_type\": \"%s"

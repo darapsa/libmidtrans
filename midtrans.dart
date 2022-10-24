@@ -19,7 +19,7 @@ class MidtransBanktransfer extends Struct {
 }
 
 class Midtrans {
-	final DynamicLibrary dylib;
+	DynamicLibrary dylib;
 
 	Midtrans(String apiKey, String caInfo) {
 		dylib = Platform.isAndroid

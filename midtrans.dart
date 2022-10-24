@@ -5,17 +5,17 @@ import 'package:ffi/ffi.dart';
 import 'package:path/path.dart' as path;
 
 class MidtransTransaction extends Struct {
-	external Pointer<Utf8> order_id;
+	Pointer<Utf8> order_id;
 
 	@Long()
-	external long gross_amount;
+	int gross_amount;
 }
 
 class MidtransBanktransfer extends Struct {
-	external Pointer<Utf8> bank;
-	external Pointer<Utf8> va_number;
-	external Pointer<Utf8> bca;
-	external Pointer<Utf8> permata;
+	Pointer<Utf8> bank;
+	Pointer<Utf8> va_number;
+	Pointer<Utf8> bca;
+	Pointer<Utf8> permata;
 }
 
 class Midtrans {

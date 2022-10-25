@@ -37,33 +37,31 @@ class Midtrans {
 		calloc.free(caInfoUtf8);
 	}
 
-	void charge<T extends Struct>(Pointer<T> payment,
+	void chargeBanktransfer(Pointer<MidtransBanktransfer> payment,
 			Pointer<MidtransTransaction> transaction,
 			Array<Pointer<Utf8>> customFields) {
-		if (payment is MidtransBanktransfer) {
-			final midtrans_charge = dylib.lookupFunction
-				<Void Function(Pointer<MidtransBanktransfer>,
-						Pointer<MidtransTransaction>,
-						Array<Pointer<Utf8>>),
-			void Function(Pointer<MidtransBanktransfer>,
+		final midtrans_charge = dylib.lookupFunction
+			<Void Function(Pointer<MidtransBanktransfer>,
 					Pointer<MidtransTransaction>,
-					Array<Pointer<Utf8>>)>
-				('midtrans_charge_banktransfer');
-			midtrans_charge(payment, transaction, customFields);
-			calloc.free((payment as MidtransBanktransfer).bank);
-			if ((payment as MidtransBanktransfer).va_number
-					!= null) {
-				calloc.free((payment as MidtransBanktransfer)
-						.va_number);
-			}
-			if ((payment as MidtransBanktransfer).bca != null) {
-				calloc.free((payment as MidtransBanktransfer)
-						.bca);
-			}
-			if ((payment as MidtransBanktransfer).permata != null) {
-				calloc.free((payment as MidtransBanktransfer)
-						.permata);
-			}
+					Array<Pointer<Utf8>>),
+		void Function(Pointer<MidtransBanktransfer>,
+				Pointer<MidtransTransaction>,
+				Array<Pointer<Utf8>>)>
+			('midtrans_charge_banktransfer');
+		midtrans_charge(payment, transaction, customFields);
+		calloc.free((payment as MidtransBanktransfer).bank);
+		if ((payment as MidtransBanktransfer).va_number
+				!= null) {
+			calloc.free((payment as MidtransBanktransfer)
+					.va_number);
+		}
+		if ((payment as MidtransBanktransfer).bca != null) {
+			calloc.free((payment as MidtransBanktransfer)
+					.bca);
+		}
+		if ((payment as MidtransBanktransfer).permata != null) {
+			calloc.free((payment as MidtransBanktransfer)
+					.permata);
 		}
 		calloc.free(transaction.order_id);
 		for (var i = 0; i < 6; i++) {

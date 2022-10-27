@@ -32,7 +32,7 @@ static size_t append(char *data, size_t size, size_t nmemb,
 	return realsize;
 }
 
-void midtrans_init(const char *api_key, const char *pem)
+void midtrans_init(const char *api_key, char *pem)
 {
 	static const char *prefix = "SB-";
 	if (strncmp(api_key, prefix, strlen(prefix)))
@@ -79,11 +79,11 @@ void midtrans_init(const char *api_key, const char *pem)
 
 	if (pem)
 		curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB,
-				&(struct curl_blob){
+				(&(struct curl_blob){
 					.data = pem,
 					.len = strlen(pem),
 					.flags = CURL_BLOB_COPY
-				});
+				}));
 }
 
 static void *request(void *arg)

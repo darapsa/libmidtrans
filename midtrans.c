@@ -32,7 +32,7 @@ static size_t append(char *data, size_t size, size_t nmemb,
 	return realsize;
 }
 
-void midtrans_init(const char *api_key, const char *cainfo)
+void midtrans_init(const char *api_key, const char *pem)
 {
 	static const char *prefix = "SB-";
 	if (strncmp(api_key, prefix, strlen(prefix)))
@@ -77,8 +77,13 @@ void midtrans_init(const char *api_key, const char *cainfo)
 	slist = curl_slist_append(slist, "Content-Type: application/json");
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 
-	if (cainfo)
-		curl_easy_setopt(curl, CURLOPT_CAINFO, cainfo);
+	if (pem)
+		curl_easy_setopt(curl, CURLOPT_CAINFO_BLOB,
+				&(struct curl_blob){
+					.data = pem,
+					.len = strlen(pem),
+					.flags = CURL_BLOB_COPY
+				});
 }
 
 static void *request(void *arg)

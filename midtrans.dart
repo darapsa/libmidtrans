@@ -21,20 +21,20 @@ class MidtransBanktransfer extends Struct {
 class Midtrans {
 	DynamicLibrary dylib;
 
-	Midtrans(String apiKey, String caInfo) {
+	Midtrans(String apiKey, String pem) {
 		dylib = Platform.isAndroid
 			? DynamicLibrary.open('libmidtrans.so')
 			: DynamicLibrary.process();
 
 		final apiKeyUtf8 = apiKey.toNativeUtf8();
-		final caInfoUtf8 = caInfo.toNativeUtf8();
+		final pemUtf8 = pem.toNativeUtf8();
 		final midtrans_init = dylib.lookupFunction
 			<Void Function(Pointer<Utf8>, Pointer<Utf8>),
 			void Function(Pointer<Utf8>, Pointer<Utf8>)>
 				('midtrans_init');
-		midtrans_init(apiKeyUtf8, caInfoUtf8);
+		midtrans_init(apiKeyUtf8, pemUtf8);
 		calloc.free(apiKeyUtf8);
-		calloc.free(caInfoUtf8);
+		calloc.free(pemUtf8);
 	}
 
 	void chargeBanktransfer(MidtransBanktransfer payment,

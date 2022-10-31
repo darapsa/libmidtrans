@@ -18,6 +18,8 @@ class MidtransBanktransfer extends Struct {
 	Pointer<Utf8> permata;
 }
 
+typedef MidtransStatus = Pointer<Utf8> Function(Pointer<Utf8>);
+
 typedef MidtransChargeBanktransfer
 = Pointer<Utf8> Function(MidtransBanktransfer, MidtransTransaction,
 		Array<Pointer<Utf8>>);
@@ -39,6 +41,15 @@ class Midtrans {
 		midtrans_init(apiKeyUtf8, pemUtf8);
 		calloc.free(apiKeyUtf8);
 		calloc.free(pemUtf8);
+	}
+
+	String status(String orderID) {
+		final midtrans_status = dylib.lookupFunction<MidtransStatus,
+		      MidtransStatus>('midtrans_status');
+		final order_id = orderID.toNativeUtf8();
+		final status = midtrans_status(order_id).toDartString();
+		calloc.free(order_id);
+		return status;
 	}
 
 	String chargeBanktransfer(MidtransBanktransfer payment,

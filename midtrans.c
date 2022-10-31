@@ -99,8 +99,8 @@ void midtrans_status(const char *order_id)
 {
 	static const char *tmpl = "%s%s/status";
 	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
-		+ (production ? strlen(order_id) : strlen(ORDER_ID)) + 1];
-	sprintf(url, tmpl, base_url, production ? order_id : ORDER_ID);
+		+ (order_id ? strlen(order_id) : strlen(ORDER_ID)) + 1];
+	sprintf(url, tmpl, base_url, order_id ? order_id : ORDER_ID);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
 	request(NULL);

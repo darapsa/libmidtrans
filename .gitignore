@@ -7,8 +7,7 @@ autom4te.cache
 autoscan*.log
 build
 compile
-config.guess
-config.sub
+config.*
 configure
 configure.scan
 depcomp

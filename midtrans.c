@@ -2,7 +2,6 @@
 #include <string.h>
 #include <openssl/bio.h>
 #include <openssl/evp.h>
-#include <pthread.h>
 #include <curl/curl.h>
 #include <json.h>
 #include "midtrans.h"
@@ -13,8 +12,6 @@ static _Bool production = 0;
 static char *base_url;
 static CURL *curl;
 static struct curl_slist *slist;
-static pthread_t *threads;
-static size_t num_threads = 0;
 
 struct response {
 	size_t size;
@@ -106,8 +103,7 @@ void midtrans_status(const char *order_id)
 	sprintf(url, tmpl, base_url, production ? order_id : ORDER_ID);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
-	threads = realloc(threads, ++num_threads * sizeof(pthread_t));
-	pthread_create(&threads[num_threads - 1], NULL, request, NULL);
+	request(NULL);
 }
 
 void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
@@ -178,14 +174,11 @@ void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
 	free(payment);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 
-	threads = realloc(threads, ++num_threads * sizeof(pthread_t));
-	pthread_create(&threads[num_threads - 1], NULL, request, NULL);
+	request(NULL);
 }
 
 void midtrans_cleanup()
 {
-	for (size_t i = 0; i < num_threads; i++)
-		pthread_join(threads[i], NULL);
 	free(base_url);
 	curl_slist_free_all(slist);
 	curl_easy_cleanup(curl);

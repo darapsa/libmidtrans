@@ -6,8 +6,6 @@
 #include <json.h>
 #include "midtrans.h"
 
-#define ORDER_ID "SANDBOX-G710367688-806"
-
 static _Bool production = 0;
 static char *base_url;
 static CURL *curl;
@@ -99,8 +97,8 @@ void midtrans_status(const char *order_id)
 {
 	static const char *tmpl = "%s%s/status";
 	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
-		+ (order_id ? strlen(order_id) : strlen(ORDER_ID)) + 1];
-	sprintf(url, tmpl, base_url, order_id ? order_id : ORDER_ID);
+		+ strlen(order_id) + 1];
+	sprintf(url, tmpl, base_url, order_id);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
 	request(NULL);

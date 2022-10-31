@@ -23,8 +23,8 @@ extern "C" {
 #endif
 
 void midtrans_init(const char *api_key, char *pem);
-void midtrans_status(const char *order_id);
-void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
+char *midtrans_status(const char *order_id);
+char *midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
 		struct midtrans_transaction *transaction,
 		char *custom_fields[]);
 void midtrans_cleanup();

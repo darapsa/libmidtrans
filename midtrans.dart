@@ -18,6 +18,9 @@ class MidtransBanktransfer extends Struct {
 	Pointer<Utf8> permata;
 }
 
+typedef MidtransChargeBanktransfer Pointer<Utf8> Function(MidtransBanktransfer,
+		MidtransTransaction, Array<Pointer<Utf8>>);
+
 class Midtrans {
 	DynamicLibrary dylib;
 
@@ -37,17 +40,14 @@ class Midtrans {
 		calloc.free(pemUtf8);
 	}
 
-	void chargeBanktransfer(MidtransBanktransfer payment,
+	String chargeBanktransfer(MidtransBanktransfer payment,
 			MidtransTransaction transaction,
 			Array<Pointer<Utf8>> customFields) {
 		final midtrans_charge = dylib.lookupFunction
-			<Void Function(MidtransBanktransfer,
-					MidtransTransaction,
-					Array<Pointer<Utf8>>),
-		void Function(MidtransBanktransfer, MidtransTransaction,
-				Array<Pointer<Utf8>>)>
+			<MidtransChargeBanktransfer, MidtransChargeBanktransfer>
 			('midtrans_charge_banktransfer');
-		midtrans_charge(payment, transaction, customFields);
+		final va_number = midtrans_charge(payment, transaction,
+				customFields).toDartString();
 		calloc.free(payment.bank);
 		if (payment.va_number != null) {
 			calloc.free(payment.va_number);
@@ -64,6 +64,7 @@ class Midtrans {
 				calloc.free(customFields[i]);
 			}
 		}
+		return va_number;
 	}
 
 	void cleanup() {

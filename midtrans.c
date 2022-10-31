@@ -81,19 +81,7 @@ void midtrans_init(const char *api_key, char *pem)
 				}));
 }
 
-static void *request(void *arg)
-{
-	struct response res = { 0, NULL };
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
-	curl_easy_perform(curl);
-#ifdef DEBUG
-	printf("%s\n", res.data);
-#endif
-	free(res.data);
-	return NULL;
-}
-
-void midtrans_status(const char *order_id)
+char *midtrans_status(const char *order_id)
 {
 	static const char *tmpl = "%s%s/status";
 	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
@@ -101,11 +89,29 @@ void midtrans_status(const char *order_id)
 	sprintf(url, tmpl, base_url, order_id);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
 
-	request(NULL);
+	struct response res = { 0, NULL };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+	curl_easy_perform(curl);
+
+	json_tokener *tokener = json_tokener_new();
+	json_object *object = json_tokener_parse_ex(tokener, res.data,
+			res.size);
+	free(res.data);
+
+	json_object *transaction_status = NULL;
+	json_object_object_get_ex(object, "transaction_status",
+			&transaction_status);
+	const char *string = json_object_get_string(transaction_status);
+	char *status = malloc(strlen(string) + 1);
+	strcpy(status, string);
+	json_tokener_free(tokener);
+
+	return status;
 }
 
-void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
-		struct midtrans_transaction *transaction, char *custom_fields[])
+char *midtrans_charge_banktransfer(struct midtrans_banktransfer
+		*banktransfer, struct midtrans_transaction *transaction,
+		char *custom_fields[])
 {
 	static const char *url_tmpl = "%scharge";
 	char url[strlen(url_tmpl) - strlen("%s") + strlen(base_url) + 1];
@@ -172,7 +178,26 @@ void midtrans_charge_banktransfer(struct midtrans_banktransfer *banktransfer,
 	free(payment);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 
-	request(NULL);
+	struct response res = { 0, NULL };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+	curl_easy_perform(curl);
+
+	json_tokener *tokener = json_tokener_new();
+	json_object *status = json_tokener_parse_ex(tokener, res.data,
+			res.size);
+	free(res.data);
+
+	json_object *va_numbers = NULL;
+	json_object_object_get_ex(status, "va_numbers", &va_numbers);
+	json_object *object = json_object_array_get_idx(va_numbers, 0);
+	json_object *number = NULL;
+	json_object_object_get_ex(object, "va_number", &number);
+	const char *string = json_object_get_string(number);
+	char *virtualaccount_number = malloc(strlen(string) + 1);
+	strcpy(virtualaccount_number, string);
+	json_tokener_free(tokener);
+
+	return virtualaccount_number;
 }
 
 void midtrans_cleanup()

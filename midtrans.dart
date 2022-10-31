@@ -18,8 +18,9 @@ class MidtransBanktransfer extends Struct {
 	Pointer<Utf8> permata;
 }
 
-typedef MidtransChargeBanktransfer Pointer<Utf8> Function(MidtransBanktransfer,
-		MidtransTransaction, Array<Pointer<Utf8>>);
+typedef MidtransChargeBanktransfer
+= Pointer<Utf8> Function(MidtransBanktransfer, MidtransTransaction,
+		Array<Pointer<Utf8>>);
 
 class Midtrans {
 	DynamicLibrary dylib;

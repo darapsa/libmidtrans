@@ -17,10 +17,9 @@ class MidtransBanktransfer extends Struct {
 }
 
 typedef MidtransStatus = Pointer<Utf8> Function(Pointer<Utf8>);
-
+typedef MidtransBanktransferNew = MidtransBanktransfer Function(Pointer<Utf8>);
 typedef MidtransChargeBanktransfer
-= Pointer<Utf8> Function(MidtransBanktransfer, MidtransTransaction,
-		Array<Pointer<Utf8>>);
+= Pointer<Utf8> Function(MidtransBanktransfer, MidtransTransaction);
 
 class Midtrans {
 	final dylib = Platform.isAndroid ? DynamicLibrary.open('libmidtrans.so')
@@ -47,31 +46,27 @@ class Midtrans {
 		return status;
 	}
 
-	String chargeBanktransfer(MidtransBanktransfer payment,
-			MidtransTransaction transaction,
-			Array<Pointer<Utf8>> customFields) {
+	String chargeBanktransfer(String bank, String orderID,
+			int grossAmount) {
+		final midtrans_banktransfer_new = dylib.lookupFunction
+			<MidtransBanktransferNew, MidtransBanktransferNew>
+			('midtrans_banktransfer_new');
+		final midtrans_transaction_new = dylib.lookupFunction
+			<MidtransTransaction Function(Pointer<Utf8>, Long),
+			MidtransTransaction Function(Pointer<Utf8>, int)>
+			('midtrans_transaction_new');
 		final midtrans_charge = dylib.lookupFunction
 			<MidtransChargeBanktransfer, MidtransChargeBanktransfer>
 			('midtrans_charge_banktransfer');
-		final va_number = midtrans_charge(payment, transaction,
-				customFields).toDartString();
-		calloc.free(payment.bank);
-		if (payment.va_number != null) {
-			calloc.free(payment.va_number);
-		}
-		if (payment.bca != null) {
-			calloc.free(payment.bca);
-		}
-		if (payment.permata != null) {
-			calloc.free(payment.permata);
-		}
-		calloc.free(transaction.order_id);
-		for (var i = 0; i < 6; i++) {
-			if (customFields[i] != null) {
-				calloc.free(customFields[i]);
-			}
-		}
-		return va_number;
+		final bankUtf8 = bank.toNativeUtf8();
+		final order_id = orderID.toNativeUtf8();
+		final vaNumber = midtrans_charge(
+				midtrans_banktransfer_new(bankUtf8),
+				midtrans_transaction_new(order_id, grossAmount))
+			.toDartString();
+		calloc.free(bankUtf8);
+		calloc.free(order_id);
+		return vaNumber;
 	}
 
 	void cleanup() {

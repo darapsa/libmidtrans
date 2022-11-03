@@ -1,8 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
-
 import 'package:ffi/ffi.dart';
-import 'package:path/path.dart' as path;
 
 class MidtransTransaction extends Struct {
 	Pointer<Utf8> order_id;

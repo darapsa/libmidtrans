@@ -23,13 +23,10 @@ typedef MidtransChargeBanktransfer
 		Array<Pointer<Utf8>>);
 
 class Midtrans {
-	DynamicLibrary dylib;
+	final dylib = Platform.isAndroid ? DynamicLibrary.open('libmidtrans.so')
+		: DynamicLibrary.process();;
 
 	Midtrans(String apiKey, String pem) {
-		dylib = Platform.isAndroid
-			? DynamicLibrary.open('libmidtrans.so')
-			: DynamicLibrary.process();
-
 		final apiKeyUtf8 = apiKey.toNativeUtf8();
 		final pemUtf8 = pem.toNativeUtf8();
 		final midtrans_init = dylib.lookupFunction

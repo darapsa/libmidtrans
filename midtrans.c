@@ -121,7 +121,8 @@ struct midtrans_transaction midtrans_transaction_new(char *order_id,
 }
 
 char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
-		struct midtrans_transaction transaction, char *custom_fields[])
+		struct midtrans_transaction transaction
+		/*, char *custom_fields[]*/)
 {
 	static const char *url_tmpl = "%scharge";
 	char url[strlen(url_tmpl) - strlen("%s") + strlen(base_url) + 1];
@@ -153,6 +154,7 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
 	char *fields = NULL;
 	static const char *field_tmpl = "\n\t\"%s\": \"%s\",";
 	const size_t field_static_len = strlen(field_tmpl) - strlen("%s") * 2;
+	/*
 	while (i < 5 && custom_fields && custom_fields[i]
 			&& custom_fields[i + 1]) {
 		size_t field_len = field_static_len + strlen(custom_fields[i])
@@ -165,6 +167,7 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
 		fields_len += field_len;
 		i += 2;
 	}
+	*/
 
 	static const char *post_tmpl =
 		"{\n"

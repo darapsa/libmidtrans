@@ -120,9 +120,8 @@ struct midtrans_transaction midtrans_transaction_new(char *order_id,
 	return (struct midtrans_transaction){ order_id, gross_amount };
 }
 
-char *midtrans_charge_banktransfer(struct midtrans_banktransfer
-		*banktransfer, struct midtrans_transaction *transaction,
-		char *custom_fields[])
+char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
+		struct midtrans_transaction transaction, char *custom_fields[])
 {
 	static const char *url_tmpl = "%scharge";
 	char url[strlen(url_tmpl) - strlen("%s") + strlen(base_url) + 1];
@@ -133,20 +132,20 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer
 		"\t\t\"va_number\": \"%s\"";
 	size_t va_number_len = 0;
 	char *va_number = NULL;
-	if (banktransfer->va_number) {
+	if (banktransfer.va_number) {
 		va_number_len = strlen(va_number_tmpl) - strlen("%s")
-			+ strlen(banktransfer->va_number);
+			+ strlen(banktransfer.va_number);
 		va_number = malloc(va_number_len + 1);
-		sprintf(va_number, va_number_tmpl, banktransfer->va_number);
+		sprintf(va_number, va_number_tmpl, banktransfer.va_number);
 	}
 
 	static const char *payment_tmpl = "bank_transfer\",\n"
 		"\t\"bank_transfer\": {\n"
 		"\t\t\"bank\": \"%s\"%s";
 	const size_t payment_len = strlen(payment_tmpl) - strlen("%s") * 2
-		+ va_number_len + strlen(banktransfer->bank);
+		+ va_number_len + strlen(banktransfer.bank);
 	char *payment = malloc(payment_len + 1);
-	sprintf(payment, payment_tmpl, banktransfer->bank,
+	sprintf(payment, payment_tmpl, banktransfer.bank,
 			va_number_len ? va_number : "");
 
 	size_t i = 0;
@@ -177,15 +176,15 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer
 		"\t\t\"gross_amount\": %ld\n"
 		"\t}\n"
 		"}";
-	long gross_amount = transaction->gross_amount;
+	long gross_amount = transaction.gross_amount;
 	size_t gross_amount_len = 1;
 	while ((gross_amount /= 10))
 		gross_amount_len++;
 	char post[strlen(post_tmpl) - strlen("%s") * 3 - strlen("%ld")
-		+ payment_len + fields_len + strlen(transaction->order_id)
+		+ payment_len + fields_len + strlen(transaction.order_id)
 		+ gross_amount_len + 1];
 	sprintf(post, post_tmpl, payment, fields_len ? fields : "",
-			transaction->order_id, transaction->gross_amount);
+			transaction.order_id, transaction.gross_amount);
 	free(payment);
 	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
 

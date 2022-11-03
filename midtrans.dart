@@ -36,15 +36,6 @@ class Midtrans {
 		calloc.free(pemUtf8);
 	}
 
-	String status(String orderID) {
-		final order_id = orderID.toNativeUtf8();
-		final status = dylib.lookupFunction
-			<MidtransStatus, MidtransStatus>
-			('midtrans_status')(order_id).toDartString();
-		calloc.free(order_id);
-		return status;
-	}
-
 	String chargeBanktransfer(String bank, String orderID,
 			int grossAmount) {
 		final bankUtf8 = bank.toNativeUtf8();
@@ -63,6 +54,15 @@ class Midtrans {
 		calloc.free(bankUtf8);
 		calloc.free(order_id);
 		return vaNumber;
+	}
+
+	String status(String orderID) {
+		final order_id = orderID.toNativeUtf8();
+		final status = dylib.lookupFunction
+			<MidtransStatus, MidtransStatus>
+			('midtrans_status')(order_id).toDartString();
+		calloc.free(order_id);
+		return status;
 	}
 
 	void cleanup() {

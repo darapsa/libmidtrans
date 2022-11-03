@@ -81,34 +81,6 @@ void midtrans_init(const char *api_key, char *pem)
 				}));
 }
 
-char *midtrans_status(const char *order_id)
-{
-	static const char *tmpl = "%s%s/status";
-	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
-		+ strlen(order_id) + 1];
-	sprintf(url, tmpl, base_url, order_id);
-	curl_easy_setopt(curl, CURLOPT_URL, url);
-
-	struct response res = { 0, NULL };
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
-	curl_easy_perform(curl);
-
-	json_tokener *tokener = json_tokener_new();
-	json_object *object = json_tokener_parse_ex(tokener, res.data,
-			res.size);
-	free(res.data);
-
-	json_object *transaction_status = NULL;
-	json_object_object_get_ex(object, "transaction_status",
-			&transaction_status);
-	const char *string = json_object_get_string(transaction_status);
-	char *status = malloc(strlen(string) + 1);
-	strcpy(status, string);
-	json_tokener_free(tokener);
-
-	return status;
-}
-
 struct midtrans_banktransfer midtrans_banktransfer_new(char *bank)
 {
 	return (struct midtrans_banktransfer){ bank, NULL, NULL, NULL };
@@ -211,6 +183,34 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
 	json_tokener_free(tokener);
 
 	return virtualaccount_number;
+}
+
+char *midtrans_status(const char *order_id)
+{
+	static const char *tmpl = "%s%s/status";
+	char url[strlen(tmpl) - strlen("%s") * 2 + strlen(base_url)
+		+ strlen(order_id) + 1];
+	sprintf(url, tmpl, base_url, order_id);
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+
+	struct response res = { 0, NULL };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+	curl_easy_perform(curl);
+
+	json_tokener *tokener = json_tokener_new();
+	json_object *object = json_tokener_parse_ex(tokener, res.data,
+			res.size);
+	free(res.data);
+
+	json_object *transaction_status = NULL;
+	json_object_object_get_ex(object, "transaction_status",
+			&transaction_status);
+	const char *string = json_object_get_string(transaction_status);
+	char *status = malloc(strlen(string) + 1);
+	strcpy(status, string);
+	json_tokener_free(tokener);
+
+	return status;
 }
 
 void midtrans_cleanup()

@@ -23,7 +23,7 @@ typedef MidtransChargeBanktransfer
 
 class Midtrans {
 	final dylib = Platform.isAndroid ? DynamicLibrary.open('libmidtrans.so')
-		: DynamicLibrary.process();;
+		: DynamicLibrary.process();
 
 	Midtrans(String apiKey, String pem) {
 		final apiKeyUtf8 = apiKey.toNativeUtf8();

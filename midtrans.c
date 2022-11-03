@@ -109,6 +109,17 @@ char *midtrans_status(const char *order_id)
 	return status;
 }
 
+struct midtrans_banktransfer midtrans_banktransfer_new(char *bank)
+{
+	return (struct midtrans_banktransfer){ bank, NULL, NULL, NULL };
+}
+
+struct midtrans_transaction midtrans_transaction_new(char *order_id,
+		long gross_amount)
+{
+	return (struct midtrans_transaction){ order_id, gross_amount };
+}
+
 char *midtrans_charge_banktransfer(struct midtrans_banktransfer
 		*banktransfer, struct midtrans_transaction *transaction,
 		char *custom_fields[])

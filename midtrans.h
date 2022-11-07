@@ -13,9 +13,9 @@ struct midtrans_banktransfer {
 	char *permata;
 };
 
-#define midtrans_charge(x, y, z) _Generic((x),\
-		struct midtrans_banktransfer *:\
-		midtrans_charge_banktransfer(x, y, z)\
+#define midtrans_charge(x, y) _Generic((x),\
+		struct midtrans_banktransfer:\
+		midtrans_charge_banktransfer(x, y)\
 		)
 
 #ifdef __cplusplus

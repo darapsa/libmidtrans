@@ -172,11 +172,14 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
 			res.size);
 	free(res.data);
 
-	json_object *va_numbers = NULL;
-	json_object_object_get_ex(status, "va_numbers", &va_numbers);
-	json_object *object = json_object_array_get_idx(va_numbers, 0);
 	json_object *number = NULL;
-	json_object_object_get_ex(object, "va_number", &number);
+	if (strcmp(banktransfer.bank, "permata")) {
+		json_object *va_numbers = NULL;
+		json_object_object_get_ex(status, "va_numbers", &va_numbers);
+		json_object *object = json_object_array_get_idx(va_numbers, 0);
+		json_object_object_get_ex(object, "va_number", &number);
+	} else
+		json_object_object_get_ex(status, "permata_va_number", &number);
 	const char *string = json_object_get_string(number);
 	char *virtualaccount_number = malloc(strlen(string) + 1);
 	strcpy(virtualaccount_number, string);

@@ -195,6 +195,7 @@ char *midtrans_status(const char *order_id)
 		+ strlen(order_id) + 1];
 	sprintf(url, tmpl, base_url, order_id);
 	curl_easy_setopt(curl, CURLOPT_URL, url);
+	curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
 	struct response res = { 0, NULL };
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);

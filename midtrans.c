@@ -86,6 +86,12 @@ struct midtrans_banktransfer midtrans_banktransfer_new(char *bank)
 	return (struct midtrans_banktransfer){ bank, NULL, NULL, NULL };
 }
 
+struct midtrans_echannel midtrans_echannel_new(char *bill_info1,
+		char *bill_info2)
+{
+	return (struct midtrans_echannel){ bill_info1, bill_info2 };
+}
+
 struct midtrans_transaction midtrans_transaction_new(char *order_id,
 		long gross_amount)
 {
@@ -186,6 +192,64 @@ char *midtrans_charge_banktransfer(struct midtrans_banktransfer banktransfer,
 	json_tokener_free(tokener);
 
 	return virtualaccount_number;
+}
+
+char *midtrans_charge_echannel(struct midtrans_echannel echannel,
+		struct midtrans_transaction transaction)
+{
+	static const char *url_tmpl = "%scharge";
+	char url[strlen(url_tmpl) - strlen("%s") + strlen(base_url) + 1];
+	sprintf(url, url_tmpl, base_url);
+	curl_easy_setopt(curl, CURLOPT_URL, url);
+
+	static const char *payment_tmpl = "echannel\",\n"
+		"\t\"echannel\": {\n"
+		"\t\t\"bill_info1\": \"%s\"%s,"
+		"\t\t\"bill_info2\": \"%s\"%s";
+	const size_t payment_len = strlen(payment_tmpl) - strlen("%s") * 4
+		+ strlen(echannel.bill_info1) + strlen(echannel.bill_info2);
+	char *payment = malloc(payment_len + 1);
+	sprintf(payment, payment_tmpl, echannel.bill_info1,
+			echannel.bill_info2);
+
+	static const char *post_tmpl =
+		"{\n"
+		"\t\"payment_type\": \"%s\n"
+		"\t},\n"
+		"\t\"transaction_details\": {\n"
+		"\t\t\"order_id\": \"%s\",\n"
+		"\t\t\"gross_amount\": %ld\n"
+		"\t}\n"
+		"}";
+	long gross_amount = transaction.gross_amount;
+	size_t gross_amount_len = 1;
+	while ((gross_amount /= 10))
+		gross_amount_len++;
+	char post[strlen(post_tmpl) - strlen("%s") * 3 - strlen("%ld")
+		+ payment_len + strlen(transaction.order_id) + gross_amount_len
+		+ 1];
+	sprintf(post, post_tmpl, payment, transaction.order_id,
+			transaction.gross_amount);
+	free(payment);
+	curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post);
+
+	struct response res = { 0, NULL };
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &res);
+	curl_easy_perform(curl);
+
+	json_tokener *tokener = json_tokener_new();
+	json_object *status = json_tokener_parse_ex(tokener, res.data,
+			res.size);
+	free(res.data);
+
+	json_object *bill_key = NULL;
+	json_object_object_get_ex(status, "bill_key", &bill_key);
+	const char *string = json_object_get_string(bill_key);
+	char *key = malloc(strlen(string) + 1);
+	strcpy(key, string);
+	json_tokener_free(tokener);
+
+	return key;
 }
 
 char *midtrans_status(const char *order_id)

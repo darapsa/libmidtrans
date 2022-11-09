@@ -16,10 +16,19 @@ class MidtransBanktransfer extends Struct {
 	Pointer<Utf8> permata;
 }
 
+class MidtransEchannel extends Struct {
+	Pointer<Utf8> bill_info1;
+	Pointer<Utf8> bill_info2;
+}
+
 typedef MidtransStatus = Pointer<Utf8> Function(Pointer<Utf8>);
 typedef MidtransBanktransferNew = MidtransBanktransfer Function(Pointer<Utf8>);
+typedef MidtransEchannelNew = MidtransEchannel Function(Pointer<Utf8>,
+		Pointer<Utf8>);
 typedef MidtransChargeBanktransfer
 = Pointer<Utf8> Function(MidtransBanktransfer, MidtransTransaction);
+typedef MidtransChargeEchannel = Pointer<Utf8> Function(MidtransEchannel,
+		MidtransTransaction);
 
 class Midtrans {
 	final dylib = Platform.isAndroid ? DynamicLibrary.open('libmidtrans.so')
@@ -54,6 +63,28 @@ class Midtrans {
 		calloc.free(bankUtf8);
 		calloc.free(order_id);
 		return vaNumber;
+	}
+
+	String chargeEchannel(String billInfo1, String billInfo2,
+			String orderID, int grossAmount) {
+		final bill_info1 = billInfo1.toNativeUtf8();
+		final bill_info2 = billInfo2.toNativeUtf8();
+		final order_id = orderID.toNativeUtf8();
+		final billKey = dylib.lookupFunction
+			<MidtransChargeEchannel, MidtransChargeEchannel>
+			('midtrans_charge_echannel')
+			(dylib.lookupFunction
+			 <MidtransEchannelNew, MidtransEchannelNew>
+			 ('midtrans_echannel_new')(bill_info1, bill_info2),
+			 dylib.lookupFunction
+			 <MidtransTransaction Function (Pointer<Utf8>, Long),
+			 MidtransTransaction Function (Pointer<Utf8>, int)>
+			 ('midtrans_transaction_new')(order_id, grossAmount))
+			.toDartString();
+		calloc.free(bill_info1);
+		calloc.free(bill_info2);
+		calloc.free(order_id);
+		return billKey;
 	}
 
 	String status(String orderID) {

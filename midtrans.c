@@ -204,9 +204,9 @@ char *midtrans_charge_echannel(struct midtrans_echannel echannel,
 
 	static const char *payment_tmpl = "echannel\",\n"
 		"\t\"echannel\": {\n"
-		"\t\t\"bill_info1\": \"%s\"%s,"
-		"\t\t\"bill_info2\": \"%s\"%s";
-	const size_t payment_len = strlen(payment_tmpl) - strlen("%s") * 4
+		"\t\t\"bill_info1\": \"%s\","
+		"\t\t\"bill_info2\": \"%s\"";
+	const size_t payment_len = strlen(payment_tmpl) - strlen("%s") * 2
 		+ strlen(echannel.bill_info1) + strlen(echannel.bill_info2);
 	char *payment = malloc(payment_len + 1);
 	sprintf(payment, payment_tmpl, echannel.bill_info1,

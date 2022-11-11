@@ -19,11 +19,9 @@ struct midtrans_echannel {
 };
 
 #define midtrans_charge(x, y) _Generic((x),\
-		struct midtrans_banktransfer:\
-		midtrans_charge_banktransfer(x, y),\
-		struct midtrans_echannel:\
-		midtrans_charge_echannel(x, y)\
-		)
+		struct midtrans_banktransfer: midtrans_charge_banktransfer,\
+		struct midtrans_echannel: midtrans_charge_echannel\
+		)(x, y)
 
 #ifdef __cplusplus
 extern "C" {

@@ -7,3 +7,5 @@ if IOS
 libmidtrans_la_LDFLAGS += -static
 endif
 include_HEADERS = midtrans.h
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = midtrans.pc

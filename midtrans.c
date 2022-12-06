@@ -288,3 +288,68 @@ void midtrans_cleanup()
 	curl_easy_cleanup(curl);
 	curl_global_cleanup();
 }
+
+enum midtrans_transaction_status midtrans_notification_transaction(char *post,
+		const char *server_key,
+		struct midtrans_transaction *transaction)
+{
+	json_tokener *tokener = json_tokener_new();
+	json_object *object = json_tokener_parse_ex(tokener, post,
+			strlen(post));
+	free(post);
+
+	enum midtrans_transaction_status status = 0;
+	const char *status_code = NULL;
+	const char *signature_key = NULL;
+	const char *order_id = NULL;
+	const char *gross_amount = NULL;
+
+	struct json_object_iterator iter = json_object_iter_begin(object);
+	struct json_object_iterator iter_end = json_object_iter_end(object);
+	while (!json_object_iter_equal(&iter, &iter_end)) {
+		const char *val = json_object_get_string(
+				json_object_iter_peek_value(&iter));
+		if (!strcmp(json_object_iter_peek_name(&iter), "status_code"))
+			status_code = val;
+		else if (!strcmp(json_object_iter_peek_name(&iter),
+					"signature_key"))
+			signature_key = val;
+		else if (!strcmp(json_object_iter_peek_name(&iter),
+					"order_id"))
+			order_id = val;
+		else if (!strcmp(json_object_iter_peek_name(&iter),
+					"gross_amount"))
+			gross_amount = val;
+		json_object_iter_next(&iter);
+	}
+	json_tokener_free(tokener);
+
+	size_t order_id_len = strlen(order_id);
+	size_t signature_fields_len = order_id_len + strlen(status_code)
+		+ strlen(gross_amount) + strlen(server_key);
+	char signature_fields[signature_fields_len + 1];
+	sprintf(signature_fields, "%s%s%s%s", transaction->order_id,
+			status_code, gross_amount, server_key);
+
+	BIO *bio = BIO_new(BIO_s_null());
+	BIO *mdtmp = BIO_new(BIO_f_md());
+	BIO_set_md(mdtmp, EVP_sha512());
+	bio = BIO_push(mdtmp, bio);
+	BIO_write(bio, signature_fields, signature_fields_len);
+	BIO_flush(bio);
+	char *pp;
+	long hash_len = BIO_get_mem_data(bio, &pp) - 1;
+	char hash[hash_len + 1];
+	strncpy(hash, pp, hash_len);
+	hash[hash_len] = '\0';
+	BIO_free_all(bio);
+
+	if (strcmp(signature_key, hash))
+		return 0;
+
+	transaction->order_id = malloc(order_id_len + 1);
+	strcpy(transaction->order_id, order_id);
+	transaction->gross_amount = strtol(gross_amount, NULL, 10);
+
+	return strtol(status_code, NULL, 10);
+}

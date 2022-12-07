@@ -32,7 +32,7 @@ struct midtrans_echannel {
 #define midtrans_notification(x, y, z) _Generic((z),\
 		struct midtrans_transaction *\
 		: midtrans_notification_transaction\
-		)(x, y)
+		)(x, y, z)
 
 #ifdef __cplusplus
 extern "C" {

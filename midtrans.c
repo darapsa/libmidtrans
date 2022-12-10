@@ -306,19 +306,17 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	struct json_object_iterator iter = json_object_iter_begin(object);
 	struct json_object_iterator iter_end = json_object_iter_end(object);
 	while (!json_object_iter_equal(&iter, &iter_end)) {
-		const char *val = json_object_get_string(
+		const char *name = json_object_iter_peek_name(&iter);
+		const char *value = json_object_get_string(
 				json_object_iter_peek_value(&iter));
-		if (!strcmp(json_object_iter_peek_name(&iter), "status_code"))
-			status_code = val;
-		else if (!strcmp(json_object_iter_peek_name(&iter),
-					"signature_key"))
-			signature_key = val;
-		else if (!strcmp(json_object_iter_peek_name(&iter),
-					"order_id"))
-			order_id = val;
-		else if (!strcmp(json_object_iter_peek_name(&iter),
-					"gross_amount"))
-			gross_amount = val;
+		if (!strcmp(name, "status_code"))
+			status_code = value;
+		else if (!strcmp(name, "signature_key"))
+			signature_key = value;
+		else if (!strcmp(name, "order_id"))
+			order_id = value;
+		else if (!strcmp(name, "gross_amount"))
+			gross_amount = value;
 		json_object_iter_next(&iter);
 	}
 	json_tokener_free(tokener);

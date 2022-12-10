@@ -332,13 +332,24 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	BIO_set_md(mdtmp, EVP_sha512());
 	bio = BIO_push(mdtmp, bio);
 	BIO_write(bio, signature_fields, signature_fields_len);
-	BIO_flush(bio);
-	char *pp;
-	long hash_len = BIO_get_mem_data(bio, &pp) - 1;
-	char hash[hash_len + 1];
-	strncpy(hash, pp, hash_len);
-	hash[hash_len] = '\0';
+	size_t signature_key_len = strlen(signature_key);
+	unsigned char mdbuf[EVP_MAX_MD_SIZE];
+	int mdlen;
+	mdtmp = bio;
+	do {
+		EVP_MD *md;
+		mdtmp = BIO_find_type(mdtmp, BIO_TYPE_MD);
+		if (!mdtmp)
+			break;
+		BIO_get_md(mdtmp, &md);
+		mdlen = BIO_gets(mdtmp, (char *)mdbuf, EVP_MAX_MD_SIZE);
+		mdtmp = BIO_next(mdtmp);
+	} while (mdtmp);
 	BIO_free_all(bio);
+	char hash[mdlen * 2 + 1];
+	hash[0] = '\0';
+	for (size_t i = 0; i < mdlen; i++)
+		sprintf(hash, "%s%02x", hash, mdbuf[i]);
 
 	if (strcmp(signature_key, hash))
 		return MIDTRANS_TRANSACTION_SIGNATUREKEYDOESNOTMATCH;

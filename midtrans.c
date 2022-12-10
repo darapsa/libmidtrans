@@ -296,7 +296,6 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	json_tokener *tokener = json_tokener_new();
 	json_object *object = json_tokener_parse_ex(tokener, post,
 			strlen(post));
-	free(post);
 
 	enum midtrans_transaction_status status = 0;
 	const char *status_code = NULL;

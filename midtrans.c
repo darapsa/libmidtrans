@@ -324,8 +324,8 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	size_t signature_fields_len = order_id_len + strlen(status_code)
 		+ strlen(gross_amount) + strlen(server_key);
 	char signature_fields[signature_fields_len + 1];
-	sprintf(signature_fields, "%s%s%s%s", transaction->order_id,
-			status_code, gross_amount, server_key);
+	sprintf(signature_fields, "%s%s%s%s", order_id, status_code,
+			gross_amount, server_key);
 
 	BIO *bio = BIO_new(BIO_s_null());
 	BIO *mdtmp = BIO_new(BIO_f_md());

@@ -297,7 +297,6 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	json_object *object = json_tokener_parse_ex(tokener, post,
 			strlen(post));
 
-	enum midtrans_transaction_status status = 0;
 	const char *status_code = NULL;
 	const char *signature_key = NULL;
 	const char *order_id = NULL;
@@ -342,7 +341,7 @@ enum midtrans_transaction_status midtrans_notification_transaction(char *post,
 	BIO_free_all(bio);
 
 	if (strcmp(signature_key, hash))
-		return 0;
+		return MIDTRANS_TRANSACTION_SIGNATUREKEYDOESNOTMATCH;
 
 	transaction->order_id = malloc(order_id_len + 1);
 	strcpy(transaction->order_id, order_id);
